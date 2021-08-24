@@ -36,11 +36,11 @@ class Player:
       #attack name:[damage type, damage, mana cost, threshold for hitting, element]
 
       'fireball':['magic', 25, 10, 75, 'fire'],
-      'light attack':['melee', self.attack, 0, 95, 'earth'],
-      'heavy attack':['melee', (self.attack*2), 0, 75, 'earth']
+      'light attack':['melee', self.attack, 0, 95, 'null'],
+      'heavy attack':['melee', (self.attack*2), 0, 75, 'null']
 
       }
-    self.coins = 99999
+    self.coins = 100
 
   
   def move(self, opponent) -> None:
@@ -81,25 +81,13 @@ class Player:
     if self.mana > self.attacks[attack_choice][2]:
       if x < self.attacks[attack_choice][3]:
         
-        opponent.take_damage(self.attacks[attack_choice][1], self.attacks[attack_choice][0])
+        opponent.take_damage(self.attacks[attack_choice][1], self.attacks[attack_choice][0], self.attacks[attack_choice][4])
         self.mana -= self.attacks[attack_choice][2]
       else:
         print('You missed your attack!')
     else:
       print('Not enough mana, pick another attack')
 
-    #if attack_choice == 'heavy attack':
-    #  x = random.randint(0, 100)
-    #  if x < 75:
-    #    opponent.take_damage(self.attack * 2)
-    #  else: 
-    #    print('You missed your attack')
-    #if attack_choice == 'light attack':
-    #  y = random.randint(0, 100)
-    #  if y < 90:
-    #    opponent.take_damage(self.attack)
-    #  else:
-    #    print('You missed your attack!')
         
   def _print_attacks(self) -> None:
     attacks_available = []
@@ -192,12 +180,12 @@ class Player:
     """
     if damage_type == 'melee':
       damage_dropoff = random.uniform(self.attack * 0.1, self.attack * 0.5)
-      damage_taken = (damage -(damage * self.melee_defence)-(damage_dropoff//100))
+      damage_taken = (damage -(damage * self.melee_defence)- damage_dropoff)
       self.hp -= round(damage_taken, 1)
       print('You were hit for', round(damage_taken, 1), ' damage')
     elif damage_type == 'magic':
       damage_dropoff = random.uniform(self.attack * 0.1, self.attack * 0.5)
-      damage_taken = (damage -(damage * self.magic_defence)-(damage_dropoff//100))
+      damage_taken = (damage -(damage * self.magic_defence)- damage_dropoff)
       self.hp -= round(damage_taken, 1)
       print('You were hit for', round(damage_taken, 1), ' damage')
 
@@ -209,6 +197,8 @@ class Player:
     """
     self.xp += exp_gained
     self.mele_defence = 0.25
+    self.mana = 30
+    self.coins += 100
     if self.xp >= 100:
       self.level += 1
       self.xp = 0

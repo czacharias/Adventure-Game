@@ -6,13 +6,14 @@ class Enemy:
   Parent class for all types of opponents, has basic attack and take damage functions
     Has a name, hp, attack, and defence
   """
-  def __init__(self, name, hp, attack, melee_defence, magic_defence):
+  def __init__(self, name, hp, attack, melee_defence, magic_defence, element):
     self.name = name
     self.hp = hp
     self.max_hp = hp
     self.attack = attack
     self.melee_defence = melee_defence
     self.magic_defence = magic_defence
+    self.element = element
 
   def __str__(self):
     """
@@ -37,22 +38,38 @@ class Enemy:
   def turn_(self, player):
     self.attack_(player)
 
-  def take_damage(self, damage, damage_type):
+  def take_damage(self, damage, damage_type, element):
     """
     For when the enemy had damage dealt to them, run in the player attack_ function
     """
-    
-    if damage_type == 'melee':
-      damage_dropoff = random.uniform(self.attack * 0.1, self.attack * 0.5)
-      damage_taken = (damage -(damage * self.melee_defence)-(damage_dropoff//100))
-      self.hp -= damage_taken
-      print('You hit the ', self.name, ' for ', damage_taken, ' damage!')
 
-    elif damage_type == 'magic':
-      damage_dropoff = random.uniform(self.attack * 0.1, self.attack * 0.5)
-      damage_taken = (damage -(damage * self.magic_defence)-(damage_dropoff//100))
-      self.hp -= damage_taken
-      print('You hit the ', self.name, ' for ', damage_taken, ' damage!')
+    if self.element == element:
+      print('Damage doubled for element alignment!')
+
+      if damage_type == 'melee':
+        damage_dropoff = random.uniform(damage * 0.1, damage * 0.5)
+        damage_taken = ((damage -(damage * self.melee_defence)- damage_dropoff)*2)
+        self.hp -= damage_taken
+        print('You hit the ', self.name, ' for ', round(damage_taken, 1), ' damage!')
+
+      elif damage_type == 'magic':
+        damage_dropoff = random.uniform(damage * 0.1, damage * 0.5)
+        damage_taken = ((damage -(damage * self.magic_defence)- damage_dropoff)*2)
+        self.hp -= round(damage_taken, 1)
+        print('You hit the ', self.name, ' for ', round(damage_taken, 1), ' damage!')
+    else:
+      if damage_type == 'melee':
+        damage_dropoff = random.uniform(damage * 0.1, damage * 0.5)
+        damage_taken = (damage -(damage * self.melee_defence)- damage_dropoff)
+        self.hp -= damage_taken
+        print('You hit the ', self.name, ' for ', round(damage_taken, 1), ' damage!')
+
+      elif damage_type == 'magic':
+        damage_dropoff = random.uniform(damage * 0.1, damage * 0.5)
+        damage_taken = (damage -(damage * self.magic_defence)- damage_dropoff)
+        self.hp -= damage_taken
+        print('You hit the ', self.name, ' for ', round(damage_taken, 1), ' damage!')
+
 
 
 
@@ -66,7 +83,7 @@ class Zombie(Enemy):
   Subclass of enemy, no new functions
   """
   def __init__(self):
-    super().__init__("Zombie", 50, 5 , 0.25, 0)
+    super().__init__("Zombie", 50, 15 , 0.25, 0, 'earth')
 
 
     
@@ -76,7 +93,7 @@ class Wizard(Enemy):
   Subclass of enemy, has healing abilties and different attacks
   """
   def __init__(self):
-    super().__init__('Wizard', 75, 15, 0.05, 0.2)
+    super().__init__('Wizard', 75, 20, 0.05, 0.2, 'water')
 
   def turn_(self, player):
     turn = random.randint(0, 1)
@@ -96,7 +113,7 @@ class Wizard(Enemy):
     if 100 < luck <= 125:
       atk_dmg = self.attack - (damage_dropoff//100)
       print("The wizard's spell backfired\n")
-      self.take_damage(atk_dmg, 'magic')
+      self.take_damage(atk_dmg, 'magic', 'water')
     if 125 < luck <= 150:
       print("The wizard's spell worked better than expected, there was no damage dropoff\n")
       player.take_damage(self.attack, 'magic')
@@ -112,9 +129,9 @@ class Aspid(Enemy):
   '''
 
   def __init__(self):
-    super().__init__('Aspid', 125, 10, 0.1, 0.1)
+    super().__init__('Aspid', 125, 10, 0.1, 0.1, 'air')
   
-  def attack_(self, player: Player) -> None:
+  def attack_(self, player) -> None:
     damage_dropoff = random.uniform(self.attack * 0.1, self.attack * 0.5)
     luck = random.randint(1, 100)
 
