@@ -1,218 +1,188 @@
 import random
+from Items import *
+from Weapons import *
 
 class Player:
 
-  """
-  Creates a player with String name and hp value int, exp int , inventory list/dictonary
-  Attack stat (for damage), level
-  """ 
+	"""
+	Creates a player with String name and hp value int, exp int , inventory list/dictonary
+	Attack stat (for damage), level
+	""" 
+	#wood_sword = Wood_Sword()
+
+	def __init__(self, name) -> None:
+		self.name = name
+		self.hp = 100
+		self.max_hp = 100
+		self.max_melee_defence = 0.25
+		self.melee_defence = 0.25
+		self.max_magic_defence = 0.25
+		self.magic_defence = 0.25
+		self.mana = 30
+		self.max_mana = 30
+		self.xp = 0
+		self.level = 0
+		self.items = Items()
+		self.weapons = [Wood_Sword(), Stick()]
+		self.current_weapon = self.weapons[1]
+		self.attack = 10
+		self.attacks = {
+
+			#attack name:[damage type, damage, mana cost, threshold for hitting, element]
+
+			'fireball':['magic', 25, 10, 75, 'fire'],
+			'light attack':['melee', self.attack, 0, 95, 'null'],
+			'heavy attack':['melee', (self.attack*2), 0, 75, 'null']
+
+			}
+		self.coins = 100
+	
+
+	def move(self, opponent) -> None:
+		"""
+		Every turn, this function runs, allows the player to choose an action
+		"""
+		turn_move = ''
+		while turn_move not in ['attack', 'use item', 'guard', 'change weapon']:
+			turn_move = input('What do you want to do?\n|Attack|  |Use Item|  |Guard| |Change Weapon|\n').lower()
+		else:
+			if turn_move == 'attack':
+				self.attack_(opponent)
+			elif turn_move == "use item":
+				self.items.item_use(self, opponent)
+			elif turn_move == 'guard':
+				if self.melee_defence >= 0.9:
+					print('Defence is maxed out, try another action\n')
+					self.move(opponent)
+				else:
+					self.melee_defence += 0.1
+			else:
+				weapons_ = []
+				for i in self.weapons:
+					weapons_.append(i)
+				print(weapons_)
+				weapon_choice = ''
+				while weapon_choice not in weapons_:
+					weapon_choice = ('\nWhat weapon do you want to use? ')
+				self.current_weapon = weapon_choice
+
+	def print_opponents(self, opponent):
+		for enemy in opponent:
+			print(enemy, end=' ')
+
+	def attack_(self, opponent) -> None:
+		"""
+		Player picks between attacks and damages their opponent
+		"""			
+
+		if len(opponent) > 1:
+			self.print_opponents(opponent)
+			opponent_choice = 0
+			while opponent_choice > (len(opponent)-1):
+				opponent_choice = int(input('\nWhat is the number of the opponent you want to attack? '))
+		else:
+			opponent_choice = 0
 
 
-  def __init__(self, name: str) -> None:
-    self.name = name
-    self.hp = 100
-    self.max_hp = 100
-    self.melee_defence = 0.25
-    self.magic_defence = 0.25
-    self.mana = 30
-    self.max_mana = 30
-    self.xp = 0
-    self.level = 0
-    self.items = {
-      
-      #item name:[item description, amount]
-      
-      'apple':["heals 10% hp", 0], 
-      'health potion': ['heals 50% hp', 1], 
-      'bandages':['heals 25% hp', 0], 
-      'mana regen':['gives 10 mana', 0], 
-      'stick':['takes away 10% hp', 0], 
-      'random potion':['gives a random effect', 5]
+		self._print_attacks()
 
-      }
-    self.attack = 10
-    self.attacks = {
+		attack_choice = ""
+		while attack_choice not in self.attacks.keys():
+			attack_choice = input('What attack do you want to use?\n').lower()
+			if attack_choice == 'back':
+				self.move(opponent)
+		x = random.randint(0, 100)
 
-      #attack name:[damage type, damage, mana cost, threshold for hitting, element]
+		if self.mana > self.attacks[attack_choice][2]: # check if they have enough mana
+			if x < self.attacks[attack_choice][3]: # check to see if attack hits
+				
+				if isinstance(self.current_weapon, Ranged_Weapon): # if weapon is ranged
+					opponent[opponent_choice].take_damage((self.attacks[attack_choice][1] + self.current_weapon.damage_increase), self.attacks[attack_choice][0], self.attacks[attack_choice][4])
+					self.mana -= self.attacks[attack_choice][2]
+					self.current_weapon.ammo -= 1
+				if self.current_weapon.name == "Stick":
+					returned = self.current_weapon.attacks_()
+					if returned:
+						opponent[opponent_choice].take_damage((self.attacks[attack_choice][1] + self.current_weapon.damage_increase), self.attacks[attack_choice][0], self.attacks[attack_choice][4])
+						self.mana -= self.attacks[attack_choice][2]
+						self.current_weapon.ammo -= 1	
+						self.move(opponent)
+				else:
+					opponent[opponent_choice].take_damage((self.attacks[attack_choice][1] + self.current_weapon.damage_increase), self.attacks[attack_choice][0], self.attacks[attack_choice][4])
+					self.mana -= self.attacks[attack_choice][2]	
+					
+			else:
+				print('You missed your attack!')
+		else:
+			print('Not enough mana, pick another attack')
 
-      'fireball':['magic', 25, 10, 75, 'fire'],
-      'light attack':['melee', self.attack, 0, 95, 'null'],
-      'heavy attack':['melee', (self.attack*2), 0, 75, 'null']
-
-      }
-    self.coins = 100
-
-  
-  def move(self, opponent) -> None:
-    """
-    Every turn, this function runs, allows the player to choose an action
-    """
-    turn_move = ''
-    while turn_move not in ['attack', 'use item', 'guard']:
-      turn_move = input('What do you want to do?\n|Attack|  |Use Item|  |Guard|\n').lower()
-    else:
-      if turn_move == 'attack':
-        self.attack_(opponent)
-      elif turn_move == "use item":
-        self.item_use(opponent)
-      elif turn_move == 'guard':
-        if self.melee_defence >= 0.9:
-          print('Defence is maxed out, try another action\n')
-          self.move(opponent)
-        else:
-          self.melee_defence += 0.1
-      else:
-        print("Invalid input")
-
-  def attack_(self, opponent) -> None:
-    """
-    Player picks between attacks and damages their opponent
-    """
-
-    self._print_attacks()
-
-    attack_choice = ""
-    while attack_choice not in self.attacks.keys():
-      attack_choice = input('What attack do you want to use?\n').lower()
-      if attack_choice == 'back':
-        self.move(opponent)
-    x = random.randint(0, 100)
-
-    if self.mana > self.attacks[attack_choice][2]:
-      if x < self.attacks[attack_choice][3]:
-        
-        opponent.take_damage(self.attacks[attack_choice][1], self.attacks[attack_choice][0], self.attacks[attack_choice][4])
-        self.mana -= self.attacks[attack_choice][2]
-      else:
-        print('You missed your attack!')
-    else:
-      print('Not enough mana, pick another attack')
-
-        
-  def _print_attacks(self) -> None:
-    attacks_available = []
-    for x in self.attacks.keys():
-      attacks_available.append(x)
-    print(attacks_available)
-
-  def _print_items(self) -> None:
-    items_available = []
-    for x in self.items:
-      if self.items[x][1] >= 1:
-        items_available.append(x)
-    print(items_available)
-    
-
-  def item_use(self, enemy):
-    """
-    Possible items and each items effect:
-    Bandages: 25%
-    Health potion: 50%
-    Random potion # Uhh this will be interesting
-    Apple: 10%
-    Stick: - 10%
-
-    """
-    item = ""
-    while item not in self.items:
-      self._print_items()
-      item = input('What item do you want to use? ').lower()
-      if item == 'back':
-        return self.move(enemy)
-    
-    item_confirm = ""
-
-
-    while item_confirm != 'yes' and item_confirm != 'no':
-      item_confirm = input(self.items[item][0] + "\nAre you sure you want to use this item? ").lower()
-      if item_confirm == 'yes':
-        
-        if item == 'bandages':
-          self.items[item][1] -= 1 
-          self.heal(0.25)
-        
-        elif item == 'health potion':
-          self.items[item][1] -= 1 
-          self.heal(0.5)
-        
-        elif item == 'apple':
-          self.items[item][1] -= 1 
-          self.heal(0.1)
-
-        elif item == 'stick':
-          self.items[item][1] -= 1 
-          self.heal(-0.1)
-
-        elif item == 'random potion':
-          self.items[item][1] -= 1 
-          effect = random.randint(0, 100)
-          if effect == 0:
-            self.take_damage(999)
-          elif effect >= 1 and effect <= 50:
-            self.heal(0.5)
-          elif effect >= 51 and effect <= 98:
-            self.heal(0.25)
-          elif effect == 99:
-            self.hp = self.max_hp
-          elif effect == 100:
-            enemy.take_damage(999)
-      
-        elif item_confirm == 'no':
-          self.item_use(enemy)
+			
+	def _print_attacks(self) -> None:
+		attacks_available = []
+		for x in self.attacks.keys():
+			attacks_available.append(x)
+		print(attacks_available)
 
 
 
-
-  def heal(self, percentage):
-    """    
-    When player uses healing item, this function heals them and gives information about the heal
-    """
-  
-    healing = self.max_hp * percentage
-    self.hp += healing
-    if self.hp > self.max_hp:
-      self.hp = self.max_hp
-    print("You have healed for {} and are now at {}/{}\n".format(healing, self.hp, self.max_hp))
-
-  def take_damage(self, damage, damage_type):
-    """
-    When the player gets damaged by their opponent, the opponent runs this function in their attack_ function
-    """
-    if damage_type == 'melee':
-      damage_dropoff = random.uniform(self.attack * 0.1, self.attack * 0.5)
-      damage_taken = (damage -(damage * self.melee_defence)- damage_dropoff)
-      self.hp -= round(damage_taken, 1)
-      print('You were hit for', round(damage_taken, 1), ' damage')
-    elif damage_type == 'magic':
-      damage_dropoff = random.uniform(self.attack * 0.1, self.attack * 0.5)
-      damage_taken = (damage -(damage * self.magic_defence)- damage_dropoff)
-      self.hp -= round(damage_taken, 1)
-      print('You were hit for', round(damage_taken, 1), ' damage')
+	def heal(self, percentage):
+		"""    
+		When player uses healing item, this function heals them and gives information about the heal
+		"""
+	
+		healing = self.max_hp * percentage
+		self.hp += healing
+		if self.hp > self.max_hp:
+			self.hp = self.max_hp
+		print("You have healed for {} and are now at {}/{}\n".format(healing, self.hp, self.max_hp))
+	
+	def take_damage(self, damage, damage_type):
+		"""
+		When the player gets damaged by their opponent, the opponent runs this function in their attack_ function
+		"""
+		if damage_type == 'melee':
+			damage_dropoff = random.uniform(self.attack * 0.1, self.attack * 0.5)
+			damage_taken = (damage -(damage * self.melee_defence) - damage_dropoff)
+			if damage_taken <= 0:
+				damage_taken = random.uniform(1, 2)
+			self.hp -= round(damage_taken, 1)
+			print('You were hit for', round(damage_taken, 1), ' damage')
+		elif damage_type == 'magic':
+			damage_dropoff = random.uniform(self.attack * 0.1, self.attack * 0.5)
+			damage_taken = (damage -(damage * self.magic_defence) - damage_dropoff)
+			if damage_taken <= 0:
+				damage_taken = random.uniform(1, 2)
+			self.hp -= round(damage_taken, 1)
+			print('You were hit for', round(damage_taken, 1), ' damage')
 
     
 
-  def end_fight(self, exp_gained):
-    """
-    At the end of the fight, this function changes xp to levels and gives upgrades
-    """
-    self.xp += exp_gained
-    self.mele_defence = 0.25
-    self.mana = 30
-    self.coins += 100
-    if self.xp >= 100:
-      self.level += 1
-      self.xp = 0
-      bonus_choice = ""
-      
+	def end_fight(self, exp_gained):
+		"""
+		At the end of the fight, this function changes xp to levels and gives upgrades
+		"""
+		
+		if self.xp >= 100:
+			self.level += 1
+			self.xp = 0
+			bonus_choice = ""
+		
 
-      while bonus_choice not in ['health', 'attack damage', 'defence']:
-        bonus_choice = input('Do you want to upgrade your health, your attack damage, or your defence?').lower
-      else:
-        if bonus_choice == 'health':
-          self.hp += self.level * 10
-          print('Your hp has increased to ', self.hp)
-        elif bonus_choice == 'attack damage':
-          self.attack += self.level * 1.5
-          print('Your hp has increased to ', self.attack)
-        elif bonus_choice == "defence":
-          self.defence += self.level
+		while bonus_choice not in ['health', 'attack damage', 'defence', 'mana']:
+			bonus_choice = input('Do you want to upgrade your health, your attack damage, or your defence?').lower
+		else:
+			if bonus_choice == 'health':
+				self.max_hp += self.level * 10
+				print('Your hp has increased to ', self.hp)
+			elif bonus_choice == 'attack damage':
+				self.attack += self.level * 1.5
+				print('Your hp has increased to ', self.attack)
+			elif bonus_choice == "defence": 
+				self.max_melee_defence += self.level
+				self.max_magic_defence += self.level
+			elif bonus_choice == 'mana':
+				self.max_mana += self.level * 5
+
+		self.xp += exp_gained
+		self.melee_defence = self.max_melee_defence
+		self.coins += 100

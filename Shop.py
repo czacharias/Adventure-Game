@@ -9,9 +9,9 @@ class Shop:
     'bandages':['heals 25% hp', 35, random.randint(0, 1)], 
     'stick':['takes away 10% hp', 5, random.randint(0, 1)], 
     'random potion':['gives a random effect', 100, random.randint(0, 1)], 
-    'attack buff':['increases attack by 2', 75, random.randint(0, 1)], 
-    'hp buff':['increases health by 10', 75, random.randint(0, 1)],
-    'mana regen':['gives 10 mana', 100, random.randint(0, 1)]
+    'attack buff':['permanently increases attack by 2', 75, random.randint(0, 1)], 
+    'hp buff':['permanently increases health by 10', 75, random.randint(0, 1)],
+    'mana regen':['regens 10 mana', 100, random.randint(0, 1)]
     }
     
 
@@ -35,9 +35,9 @@ class Shop:
           self.inventory[item][2] -= 1
           player.coins -= selected[1]
           if item == 'attack buff':
-              player.attack += 2
+              player.max_attack += 2
           if item == 'hp buff':
-            player.hp += 10
+            player.max_hp += 10
         else:
           pass
         self.sell(player)
