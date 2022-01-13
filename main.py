@@ -1,5 +1,7 @@
 import random
+import ast
 from Player import *
+from Weapons import *
 from Enemy import *
 from Shop import *
 from Tavern import *
@@ -14,47 +16,182 @@ class Main:
 		self.shop = Shop()
 		self.opponents = ["Zombie", "Wizard"]
 
+	def save_check(self, file):
+		with open(file, mode = 'r') as f:
+			a = f.read()
+			if a != '':
+				print("That file already has a save, are you sure you want to overwrite it?")
+				b = input('> ').lower()
+				if b == "yes":
+					return True
+				else:
+					return False
+			return True
+
+
+	def save_write(self, player, room):
+		weapons = []
+		for i in player.weapons:
+			weapons.append(i.name)
+		files = ['1', 'save 1', '2', 'save 2', '3', 'save 3']
+		file = ''
+		while file not in files:
+			file = input("|Choose a save|\nSave 1\nSave 2\nSave 3\n> ").lower()
+		if file == "1" or file == "save 1":
+			a = self.save_check("save_1")
+			if a == True:
+				with open('save_1', mode = 'w') as f:
+					f.write(player.name) 
+					f.write('\n')
+					f.write(str(player.hp))
+					f.write('\n')
+					f.write(str(weapons))
+					f.write('\n')
+					f.write(str(player.xp))
+					f.write('\n')
+					f.write(str(player.level))
+					f.write('\n')
+					f.write(str(player.coins))
+					f.write('\n')
+					f.write(str(room))
+					print("File saved")
+			else:
+				self.save_write(player, room)
+				return
+		elif file == "2" or file == "save 2":
+			a = self.save_check("save_2")
+			if a == True:
+				with open('save_2', mode = 'w') as f:
+					f.write(player.name) 
+					f.write('\n')
+					f.write(str(player.hp))
+					f.write('\n')
+					f.write(str(weapons))
+					f.write('\n')
+					f.write(str(player.xp))
+					f.write('\n')
+					f.write(str(player.level))
+					f.write('\n')
+					f.write(str(player.coins))
+					f.write('\n')
+					f.write(str(room))
+					print("File saved")
+			else:
+				self.save_write(player, room)
+				return
+		elif file == "3" or file == "save 3":
+			a = self.save_check("save_3")
+			if a == True:
+				with open('save_3', mode = 'w') as f:
+					f.write(player.name) 
+					f.write('\n')
+					f.write(str(player.hp))
+					f.write('\n')
+					f.write(str(weapons))
+					f.write('\n')
+					f.write(str(player.xp))
+					f.write('\n')
+					f.write(str(player.level))
+					f.write('\n')
+					f.write(str(player.coins))
+					f.write('\n')
+					f.write(str(room))
+					print("File saved")
+			else:
+				self.save_write(player, room)
+				return
+	
+# name , hp, weapons, xp, level, coins, room
+	def weapon_stringToObj(self, weapons):
+		for n, i in enumerate(weapons):
+			if i == 'Wood Sword':
+				weapons[n] = Wood_Sword()
+			elif i == 'Stone Sword':
+				weapons[n] = Stone_Sword()
+			elif i == 'Stick':
+				weapons[n] = Stick()
+			elif i == 'Gun':
+				weapons[n] = Gun()
+			elif i == 'Bow':
+				weapons[n] = Bow()
+
+
+	def save_read(self, player, room):
+		files = ['1', 'save 1', '2', 'save 2', '3', 'save 3']
+		file = ''
+		while file not in files:
+			file = input("|Choose a save|\nSave 1\nSave 2\nSave 3\n> ").lower()
+		if file in files[0:2]:
+			file = 'save_1'
+		elif file in files[2:4]:
+			file = 'save_2'
+		elif file in files[4:]:
+			file = 'save_3'
+		with open(file, mode = 'r') as f:
+			save_file = f.read()
+		save_file = save_file.split("\n")
+		print(save_file)
+		player.name = save_file[0]
+		player.hp = int(save_file[1])
+		player.weapons.clear()
+		player.weapons = ast.literal_eval(save_file[2])
+		player.xp = int(save_file[3])
+		player.level = int(save_file[4])
+		player.coins = int(save_file[5])
+		room = int(save_file[6])
+		print(player.weapons)
+		self.weapon_stringToObj(player.weapons)
+		print(player.weapons)
+
+	
+
+
+
 	def fight(self, player, opponents):
 		"""
 		Decides who's turn it is in a fight, and has them take turns as needed
 		"""
 		if len(opponents) == 1:
-			for opponent in opponents:
-
-				turn = 1
-				while player.hp > 0 and opponent.hp > 0:
-					if turn == 1:
-						player.move([opponent])
-						turn = 0
-					if turn == 0:
-						opponent.turn_(player)
-						turn = 1
+			opponent = opponents[0]
+			turn = 0
+			while self.player.hp >= 0 and opponent.hp >= 0:
+				print("Your Hp | ", self.player.hp, "/", self.player.max_hp, '\nOpponent hp | ', opponent.hp, "/", opponent.max_hp, '\n')
+				if turn == 0:
+					self.player.move([opponent])
+					turn = 1
+				elif turn == 1:
+					opponent.attack_()
+					turn = 0
 		else:
-			player.move(opponents)
-			for opponent in opponents:
-				opponent.turn_(player)
+			opponentsDead = 0
+			while opponentsDead >= 0 and self.player.hp > 0:
+				opponentsDead = 0
+				for opponent in opponents:
+					if opponent.hp > 0:
+						opponentsDead += 1
+					else:
+						opponents.remove(opponent)
+				if opponentsDead == 0:
+					opponentsDead -= 1
+				elif opponentsDead > 0:
+					for opponent in opponents:
+						if opponent.hp > 0:
+							opponent.attack_()
+						else:
+							pass
+					self.player.move(opponents)
+					print("Your Hp | ", self.player.hp, "/", self.player.max_hp)
+					for opponent in opponents:
+						print(opponent.name, 'hp | ', opponent.hp, '/', opponent.max_hp)
+			
 
-		print('\nYour health: ', round(player.hp, 1), "/", player.max_hp) 
-		for opponent in opponents:
-			print(opponent.name, "health: ", round(opponent.hp, 1), '/', opponent.max_hp)
-		if player.hp < 0:
-				player.hp = 0
-		if opponent.hp < 0:
-				opponent.hp = 0
-		else:
-			if player.hp <= 0:
-				print('You died! Game Over.')
-				return
-			elif opponent.hp <= 0:
-				print('You killed ', opponent)
-				opponent.item_drop(player)
-				return
+
 
 	def opponent_creator(self, opponent):
 		if opponent == 'Zombie':
-			return Zombie()
+			return Zombie(self.player)
 		if opponent == 'Wizard':
-			return Wizard()
+			return Wizard(self.player)
 
 
 	def run_game(self):
@@ -71,10 +208,13 @@ class Main:
 
 
 
-		room = 6
+		room = 0
+		self.save_write(self.player, room)
+		self.save_read(self.player, room)
+		self.tavern.gamble(self.player)
+	
 
 		print('You stumble into a cave')
-		self.tavern.gamble(self.player)
 
 		while self.player.hp > 0:
 			if room == 0:
@@ -123,7 +263,7 @@ class Main:
 
 			elif room == 4:
 				print("\nYou encounter your first boss\n")
-				self.aspid = Aspid()
+				self.aspid = Aspid(self.player)
 				self.fight(self.player, [self.aspid])
 				print('\nAfter killing the boss, you find a pile of coins on the ground\n')
 				self.player.coins += 150
@@ -148,15 +288,39 @@ class Main:
 				self.you = You(self.player)
 				print('Your dead body stands up')  
 				self.fight(self.player, [self.you])
+				room == 5
 
 			elif room == 7:
 				rm7_enemies = []
 				fly_name = 'fly-'
-				for i in range(13):
+				for i in range(5):
 					fly_name = fly_name + str(i)
-					rm7_enemies.append(fly_swarm(fly_name))
+					rm7_enemies.append(fly_swarm(fly_name, self.player))
 					fly_name = 'fly-'
 				self.fight(self.player, rm7_enemies)
+				room = 8
+			
+			elif room == 8:
+				trader = Trader(self.player)
+				sales_pitch = trader.bargian(self.player)
+				if not sales_pitch:
+					self.fight(self.player, [trader])
+				room = random.randint(0, 7)
+			
+			elif room == 9:
+				gold_brick = Gold_Brick(self.player)
+				print('You find a gold brick lying on the ground')
+				self.fight(self.player, [gold_brick])
+				room = 10
+			
+			else:
+				print("this game is nowhere close to being done, this room doesnt exist yet, sorry\n")
+				room = random.randint(0, 9)
+
+				
+				
+
+
 					
 
   

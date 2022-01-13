@@ -21,10 +21,10 @@ class Player:
 		self.mana = 30
 		self.max_mana = 30
 		self.xp = 0
-		self.level = 0
+		self.level = 1
 		self.items = Items()
-		self.weapons = [Wood_Sword(), Stick()]
-		self.current_weapon = self.weapons[1]
+		self.weapons = [Wood_Sword(), Stone_Sword()]
+		self.current_weapon = self.weapons[0]
 		self.attack = 10
 		self.attacks = {
 
@@ -48,27 +48,46 @@ class Player:
 		else:
 			if turn_move == 'attack':
 				self.attack_(opponent)
+				return
 			elif turn_move == "use item":
 				self.items.item_use(self, opponent)
+				return
 			elif turn_move == 'guard':
 				if self.melee_defence >= 0.9:
 					print('Defence is maxed out, try another action\n')
 					self.move(opponent)
+					return
 				else:
 					self.melee_defence += 0.1
+					self.magic_defence += 1
+					print('Your guard increased by one\n')
+				return
 			else:
+				weapons_names = []
 				weapons_ = []
 				for i in self.weapons:
+					weapons_names.append(i.name)
 					weapons_.append(i)
-				print(weapons_)
-				weapon_choice = ''
-				while weapon_choice not in weapons_:
-					weapon_choice = ('\nWhat weapon do you want to use? ')
+				print("Current Weapon: ", self.current_weapon)
+				self.print_weapons()
+				print(weapons_names)
+				weapon_name = ''
+				while weapon_name not in weapons_names:
+					weapon_name = input('\nWhat weapon do you want to use? ')
+				weapon_choice = weapons_[weapons_names.index(weapon_name)]
 				self.current_weapon = weapon_choice
+				self.move(opponent)
+				return
 
 	def print_opponents(self, opponent):
 		for enemy in opponent:
 			print(enemy, end=' ')
+
+	def print_weapons(self):
+		weapon_lst = []
+		for name in self.weapons:
+			weapon_lst.append(name.name)
+		print(weapon_lst)
 
 	def attack_(self, opponent) -> None:
 		"""
@@ -77,12 +96,11 @@ class Player:
 
 		if len(opponent) > 1:
 			self.print_opponents(opponent)
-			opponent_choice = 0
+			opponent_choice = 9999
 			while opponent_choice > (len(opponent)-1):
 				opponent_choice = int(input('\nWhat is the number of the opponent you want to attack? '))
 		else:
 			opponent_choice = 0
-
 
 		self._print_attacks()
 
@@ -100,12 +118,11 @@ class Player:
 					opponent[opponent_choice].take_damage((self.attacks[attack_choice][1] + self.current_weapon.damage_increase), self.attacks[attack_choice][0], self.attacks[attack_choice][4])
 					self.mana -= self.attacks[attack_choice][2]
 					self.current_weapon.ammo -= 1
-				if self.current_weapon.name == "Stick":
+				if self.current_weapon.name == "Stick" and attack_choice != 'fireball':
 					returned = self.current_weapon.attacks_()
 					if returned:
 						opponent[opponent_choice].take_damage((self.attacks[attack_choice][1] + self.current_weapon.damage_increase), self.attacks[attack_choice][0], self.attacks[attack_choice][4])
 						self.mana -= self.attacks[attack_choice][2]
-						self.current_weapon.ammo -= 1	
 						self.move(opponent)
 				else:
 					opponent[opponent_choice].take_damage((self.attacks[attack_choice][1] + self.current_weapon.damage_increase), self.attacks[attack_choice][0], self.attacks[attack_choice][4])
@@ -121,7 +138,7 @@ class Player:
 		attacks_available = []
 		for x in self.attacks.keys():
 			attacks_available.append(x)
-		print(attacks_available)
+		print('\n', attacks_available)
 
 
 
@@ -185,4 +202,5 @@ class Player:
 
 		self.xp += exp_gained
 		self.melee_defence = self.max_melee_defence
+		self.magic_defence = self.max_magic_defence
 		self.coins += 100

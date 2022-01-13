@@ -6,7 +6,7 @@ class Enemy:
 	Parent class for all types of opponents, has basic attack and take damage functions
 	Has a name, hp, attack, and defence
 	"""
-	def __init__(self, name, hp, attack, melee_defence, magic_defence, element):
+	def __init__(self, name, hp, attack, melee_defence, magic_defence, element, player):
 		self.name = name
 		self.hp = hp
 		self.max_hp = hp
@@ -14,6 +14,7 @@ class Enemy:
 		self.melee_defence = melee_defence
 		self.magic_defence = magic_defence
 		self.element = element
+		self.player = player
 
 	def __str__(self):
 		"""
@@ -21,22 +22,22 @@ class Enemy:
 		"""
 		return self.name 
 
-	def attack_(self, player):
+	def attack_(self):
 		"""
 		For when an enemy deals damage to the player
 		"""
 
 		luck = random.randint(1, 150)
 		if luck < 100:
-			player.take_damage(self.attack,'melee')
+			self.player.take_damage(self.attack,'melee')
 		elif 100 < luck < 125:
-			player.take_damage((self.attack * 1.25), 'melee')
+			self.player.take_damage((self.attack * 1.25), 'melee')
 
 		else:
 			print(self, 'missed')
 
-	def turn_(self, player):
-		self.attack_(player)
+	def turn_(self):
+		self.attack_()
 
 	def take_damage(self, damage, damage_type, element):
 		"""
@@ -50,39 +51,50 @@ class Enemy:
 				damage_dropoff = random.uniform(damage * 0.1, damage * 0.5)
 				damage_taken = ((damage -(damage * self.melee_defence)- damage_dropoff)*2)
 				self.hp -= damage_taken
+				if self.hp < 0:
+					self.hp = 0
 				print('You hit the ', self.name, ' for ', round(damage_taken, 1), ' damage!')
 			elif damage_type == 'magic':
 				damage_dropoff = random.uniform(damage * 0.1, damage * 0.5)
 				damage_taken = ((damage -(damage * self.magic_defence)- damage_dropoff)*2)
 				self.hp -= round(damage_taken, 1)
+				if self.hp < 0:
+					self.hp = 0
 				print('You hit the ', self.name, ' for ', round(damage_taken, 1), ' damage!')
 		else:
 			if damage_type == 'melee':
 				damage_dropoff = random.uniform(damage * 0.1, damage * 0.5)
 				damage_taken = (damage -(damage * self.melee_defence)- damage_dropoff)
 				self.hp -= damage_taken
+				if self.hp < 0:
+					self.hp = 0
 				print('You hit the ', self.name, ' for ', round(damage_taken, 1), ' damage!')
 			elif damage_type == 'magic':
 				damage_dropoff = random.uniform(damage * 0.1, damage * 0.5)
 				damage_taken = (damage -(damage * self.magic_defence)- damage_dropoff)
 				self.hp -= damage_taken
+				if self.hp < 0:
+					self.hp = 0
 				print('You hit the ', self.name, ' for ', round(damage_taken, 1), ' damage!')
 
-	def item_drop(self, Player):
+		if self.hp <= 0:
+			print('\nYou killed the ', self)
+			self.item_drop()
+
+	def item_drop(self):
 		'''
 		End of fight, enemy might drop weapon
 		'''
 		weapons = [Wood_Sword(), Stone_Sword(), Bow(), Gun()]
 		for i in weapons:
-			for j in Player.weapons:
+			for j in self.player.weapons:
 				if i == j:
 					weapons.remove(i)
 					
 		weapon_drop_chance = random.randint(1, 2)
 		if weapon_drop_chance == 2:
 			weapon_drop = weapons[random.randint(0, len(weapons) - 1)]
-			Player.weapons.append(weapon_drop)
-			print(Player.weapons)
+			self.player.weapons.append(weapon_drop)
 			print('You found a ', weapon_drop)
 
 
@@ -98,8 +110,8 @@ class Zombie(Enemy):
   """
   Subclass of enemy, no new functions
   """
-  def __init__(self):
-    super().__init__("Zombie", 0, 15 , 0.25, 0, 'earth')
+  def __init__(self, player):
+    super().__init__("Zombie", 0, 15 , 0.25, 0, 'earth', player)
 
 
     
@@ -108,31 +120,31 @@ class Wizard(Enemy):
 	"""
 	Subclass of enemy, has healing abilties and different attacks
 	"""
-	def __init__(self):
-		super().__init__('Wizard', 75, 20, 0.05, 0.2, 'water')
+	def __init__(self, player):
+		super().__init__('Wizard', 75, 20, 0.05, 0.2, 'water', player)
 
-	def turn_(self, player):
+	def turn_(self):
 		turn = random.randint(0, 1)
 		if turn == 0:
-			self.attack_(player)
+			self.attack_()
 		if turn == 1:
 			self.heal()
 
-	def attack_(self, player):
+	def attack_(self):
 		damage_dropoff = random.uniform(self.attack * 0.1, self.attack * 0.5)
 		luck = random.randint(1, 150)
 
 		if luck <= 100:
 			atk_dmg = self.attack - (damage_dropoff//100)
 			print('The wizard cast a basic damage spell')
-			player.take_damage(atk_dmg, 'magic')
+			self.player.take_damage(atk_dmg, 'magic')
 		if 100 < luck <= 125:
 			atk_dmg = self.attack - (damage_dropoff//100)
 			print("The wizard's spell backfired\n")
 			self.take_damage(atk_dmg, 'magic', 'water')
 		if 125 < luck <= 150:
 			print("The wizard's spell worked better than expected, there was no damage dropoff\n")
-			player.take_damage(self.attack, 'magic')
+			self.player.take_damage(self.attack, 'magic')
 
 	def heal(self):
 		hp_increase = random.randint(5, 15)
@@ -144,19 +156,19 @@ class Aspid(Enemy):
   Subclass of enemy, custom attacks
   '''
 
-  def __init__(self):
-    super().__init__('Aspid', 125, 10, 0.1, 0.1, 'air')
+  def __init__(self, player):
+    super().__init__('Aspid', 125, 10, 0.1, 0.1, 'air', player)
   
-  def attack_(self, player) -> None:
+  def attack_(self) -> None:
     damage_dropoff = random.uniform(self.attack * 0.1, self.attack * 0.5)
     luck = random.randint(1, 100)
 
     if luck <= 75:
       print('The Aspid charges towards you and hits you dead center')
-      player.take_damage(self.attack - (damage_dropoff//100), 'melee')
+      self.player.take_damage(self.attack - (damage_dropoff//100), 'melee')
     if 75 < luck <= 100:
       print('The Aspid shoots acid at you, which does double damage')
-      player.take_damage((self.attack - (damage_dropoff//100))*2, 'melee') 
+      self.player.take_damage((self.attack - (damage_dropoff//100))*2, 'melee') 
 
 
 class fly_swarm(Enemy):
@@ -164,7 +176,7 @@ class fly_swarm(Enemy):
 	Subclass of enemy
 	'''
 
-	def __init__(self, name):
+	def __init__(self, name, player):
 		self.name = name
 		self.hp = 10 
 		self.max_hp = 10
@@ -172,6 +184,7 @@ class fly_swarm(Enemy):
 		self.melee_defence = 0
 		self.magic_defence = 0
 		self.element = 'air'
+		self.player = player
 	
 	def __str__(self):
 		return self.name
@@ -181,7 +194,7 @@ class You():
 	Subclass of enemy, custom attacks, final boss, has same moveset as player
 	'''
 
-	def __init__(self, opponent):
+	def __init__(self, opponent, player):
 		self.name = 'Dark ' + opponent.name 
 		self.hp = 1
 		self.max_hp = 100
@@ -337,6 +350,9 @@ class You():
 			damage_taken = (damage -(damage * self.magic_defence)- damage_dropoff)
 			self.hp -= round(damage_taken, 1)
 			print(self.name, 'was hit for', round(damage_taken, 1), ' damage')
+		if self.hp <= 0:
+			print('\nYou killed the ', self)
+			self.item_drop()
 
 	def heal(self, percentage):
 		"""    
@@ -351,5 +367,99 @@ class You():
 			self.hp = self.max_hp
 		print("You healed for {} and are now at {}/{}\n".format(healing, self.hp, self.max_hp))
 
+class Trader(Enemy):
+	def __init__(self, player):
+		super().__init__('Trader', 50, 35, 0.25, 0.25, 'earth', player)
+		
+	def bargian(self):
+		print('Hey, you there, want to buy this?')
+		answer = ''
+		while answer != 'yes' and answer != 'no':
+			answer = input('> ').lower()
+			if answer != 'yes' and answer != 'no':
+				print('what?\n')
+		if answer == 'no':
+			for i in range(10):
+				print('please buy it')
+				answer = ''
+				while answer != 'yes':
+					answer = input('> ').lower()
+				if answer == 'yes':
+					self.sold()
+					return True
+			print(r"Then i'll take the coins from your dead body")
+			return False
+		if answer == 'yes':
+			self.sold()
+			return True
 
+	def sold(self):
+		print(r"great, i'll just take your money!")
+		print("- All your money\n+ a feeling of tremendous loss")
+		self.player.coins -= int(self.player.coins)
+		
 
+class Gold_Brick(Enemy):
+	def __init__(self, player):
+		super().__init__('Gold Brick', 250, 0, 0, 0, 'earth', player)
+	
+	def attack_(self):
+		x = []
+		y = random.randint(0, 20)
+		z = random.randint(0, 20)
+		x.append(z)
+		if y in x:
+			print('The gold brick walked away\n')
+			self.hp = 0
+		else:
+			print('The gold brick just sits there\n')
+	
+	def take_damage(self, damage, damage_type, element):
+		"""
+		For when the enemy had damage dealt to them, run in the player attack_ function
+		"""
+
+		if self.element == element:
+			print('Damage doubled for element alignment!')
+
+			if damage_type == 'melee':
+				x = random.randint(5, 25)
+				damage_dropoff = random.uniform(damage * 0.1, damage * 0.5)
+				damage_taken = ((damage -(damage * self.melee_defence)- damage_dropoff)*2)
+				self.hp -= damage_taken
+				print('You hit the ', self.name, ' for ', round(damage_taken, 1), ' damage! and gained ', x, ' coins')
+				self.player.coins += x
+			elif damage_type == 'magic':
+				x = random.randint(5, 25)
+				damage_dropoff = random.uniform(damage * 0.1, damage * 0.5)
+				damage_taken = ((damage -(damage * self.magic_defence)- damage_dropoff)*2)
+				self.hp -= round(damage_taken, 1)
+				print('You hit the ', self.name, ' for ', round(damage_taken, 1), ' damage! and gained ', x, ' coins')
+				self.player.coins += x
+		else:
+			if damage_type == 'melee':
+				x = random.randint(5, 25)
+				damage_dropoff = random.uniform(damage * 0.1, damage * 0.5)
+				damage_taken = (damage -(damage * self.melee_defence)- damage_dropoff)
+				self.hp -= damage_taken
+				print('You hit the ', self.name, ' for ', round(damage_taken, 1), ' damage! and gained ', x, ' coins')
+				self.player.coins += x
+			elif damage_type == 'magic':
+				x = random.randint(5, 25)
+				damage_dropoff = random.uniform(damage * 0.1, damage * 0.5)
+				damage_taken = (damage -(damage * self.magic_defence)- damage_dropoff)
+				self.hp -= damage_taken
+				print('You hit the ', self.name, ' for ', round(damage_taken, 1), ' damage! and gained ', x, ' coins')
+				self.player.coins += x
+		if self.hp <= 0:
+			print('\nYou killed the ', self)
+			self.item_drop()
+		
+				
+
+	def item_drop(self):
+		'''
+		End of fight, enemy might drop weapon
+		'''
+		print('The gold bar broke into a bunch of little peices!')
+		self.player.coins += 10000

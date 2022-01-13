@@ -39,7 +39,7 @@ class Shop:
           if item == 'hp buff':
             player.max_hp += 10
         else:
-          pass
+          pass 
         self.sell(player)
         
     else:

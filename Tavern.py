@@ -40,7 +40,10 @@ class Tavern:
 				previous_losses = int(f.read())
 			with open('money_lost', mode = 'w') as f:
 				f.write(str(previous_losses + self.total_lost))
-			print('You lost: ', self.total_lost, ' coins')
+			if self.total_lost < 0:
+				print('You lost: ', self.total_lost, ' coins')
+			elif self.total_lost > 0:
+				print('You won: ', self.total_lost, ' coins')
 			return
 
 	def roulette(self, player):
@@ -50,6 +53,9 @@ class Tavern:
 			if bet > player.coins:
 				print('You dont have enough coins to bet that')
 				bet = ''
+				if player.coins == 0:
+					self.gamble(player)
+					return
       
 		p_number = -1
 
@@ -74,7 +80,7 @@ class Tavern:
 		elif type(p_number) == str:
 			x = random.randint(0, 36)
 			if p_number == 'evens' and x%2 == 0 or p_number == 'odds' and x%2 != 0:
-				winnings = bet*10
+				winnings = bet*2
 				self.total_lost += winnings
 				print('The wheel landed on ', p_number, ' you win!\nYou won ', winnings)
 				player.coins += winnings
@@ -82,14 +88,14 @@ class Tavern:
 				self.total_lost -= bet
 				player.coins -= bet
 				print('The number was: ', x)
-		retry = ''
-		while retry != 'yes' and retry != 'no':
-			print('You have ', player.coins, ' coins')
-			retry = input('You lost, try again? ').lower()
-		if retry == 'yes':
-			self.roulette(player)
-		elif retry == 'no':
-			self.gamble(player)
+			retry = ''
+			while retry != 'yes' and retry != 'no':
+				print('You have ', player.coins, ' coins')
+				retry = input('Bet again? ').lower()
+			if retry == 'yes':
+				self.roulette(player)
+			elif retry == 'no':
+				self.gamble(player)
       
 
 	def slots(self, player):
@@ -101,6 +107,7 @@ class Tavern:
 				bet = 0
 				if player.coins == 0:
 					self.gamble(player)
+					return
 		roll_1 = int(self.slot_1[random.randint(0, len(self.slot_1)-1)])
 		roll_2 = int(self.slot_2[random.randint(0, len(self.slot_2)-1)])
 		roll_3 = int(self.slot_3[random.randint(0, len(self.slot_3)-1)])
